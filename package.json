@@ -2,13 +2,14 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "engines": {
-    "node": "14.x"
+  "engines":{
+    "node":"14.x"
   },
   "main": "index.js",
   "scripts": {
+    "build": "babel src --out-dir dist",
     "dev": "nodemon src/index.js --exec babel-node",
-    "dev:hk":"node src/index.js --exec babel-node"
+    "start": "node dist/index.js"
   },
   "keywords": [],
   "author": "",
