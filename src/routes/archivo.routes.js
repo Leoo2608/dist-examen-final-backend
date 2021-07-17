@@ -2,10 +2,9 @@ import { Router } from 'express'
 import * as archivoCtrl from '../controllers/archivo.controller'
 const router = Router();
 const { checkToken } = require('../auth/token_validation');
-const multer = require("multer");
 const { google } = require('googleapis');
-const path = require('path');
-const fs = require('fs');
+const  { Readable } =require('stream');
+
 const CLIENT_ID = '238294881843-22dpks11mfm1vl2kh7tdpscjqo22m8q5.apps.googleusercontent.com';
 const CLIENT_SECRET = '9xQBcZ8vqe2ucoiWikRDRLvt';
 const REDIRECT_URI = 'https://developers.google.com/oauthplayground';
@@ -20,33 +19,45 @@ const drive = google.drive({
     version: 'v3',
     auth: oauth2Client
 });
+
 var filePath;
 var archivo;
-var storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'src/archivos/')
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname)
+
+router.post('/uploading', async (req, res)=>{ // 
+    if(req.files){
+        console.log(req.files)
+        console.log(req.files.hola.data);
+        var myBuffer = req.files.hola.data;
+        const stream = Readable.from(myBuffer)
+        filePath = stream;
+        archivo = req.files.hola.name; // nombre del archivo 
+        const tipo = req.files.hola.mimetype; // tipo del archivo
+        const link = await uploadFile(tipo);
+        res.send(link)
     }
 })
-var upload = multer({ storage: storage });
-router.post("/upload", checkToken, upload.single("document"), async (req, res, next) => {
-    filePath = path.join("src/archivos/", req.file.originalname);
-    console.log(filePath);
-    const file = req.file;
-    archivo = file.originalname;
-    if (!file) {
-        const error = new Error("Please upload a file");
-        error.httpStatusCode = 400;
-        return next(error);
-    } else {
-        const tipo = req.file.mimetype;
-        const link = await uploadFile(tipo);
-        res.send(link);
-    }
-});
 
+async function uploadFile(tipo) {
+    try {
+        const response = await drive.files.create({
+            requestBody: {
+                name: archivo,
+                mimeType: tipo
+            },
+            media: {
+                body: filePath
+            }
+        })
+        console.log(response.data);
+        const link = await generatePublicUrl(response.data.id);
+        console.log("uploadFile() va a retornar: " + link)
+        return link;
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+// do not touch
 async function generatePublicUrl(id) {
     try {
         const fileId = id;
@@ -68,26 +79,6 @@ async function generatePublicUrl(id) {
     }
 }
 
-async function uploadFile(tipo) {
-    try {
-        const response = await drive.files.create({
-            requestBody: {
-                name: archivo,
-                mimeType: tipo
-            },
-            media: {
-                body: fs.createReadStream(filePath)
-            }
-        })
-        fs.unlinkSync(filePath);
-        console.log(response.data);
-        const link = await generatePublicUrl(response.data.id);
-        console.log("uploadFile() va a retornar: " + link)
-        return link;
-    } catch (error) {
-        console.log(error.message);
-    }
-}
 
 router.get("/:id", checkToken, archivoCtrl.listarArchivos);
 router.post("/", checkToken, archivoCtrl.addArchivo);
