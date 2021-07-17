@@ -1,7 +1,8 @@
 import { pool } from '../database'
 export const listarArchivos = async (req, res) => {
     try {
-        const response = await pool.query('select * from fc_list_archivos()');
+        const id=parseInt(req.params.id);
+        const response = await pool.query('select * from fc_listar_archivos($1)',[id]);
         return res.status(200).json(response.rows);
     } catch (e) {
         console.log(e);
