@@ -1,1 +1,1 @@
-web: npm run dev:kh
+web: npm run dev:hk
