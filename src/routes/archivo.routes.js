@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import * as archivoCtrl from '../controllers/archivo.controller'
 const router = Router();
 const { checkToken } = require('../auth/token_validation');
 const multer = require("multer");
@@ -30,7 +31,7 @@ var storage = multer.diskStorage ({
     }
   })
 var upload = multer ({storage: storage});
-router.post("/", upload.single("document"), async (req, res, next) => {
+router.post("/upload",checkToken ,upload.single("document"), async (req, res, next) => {
     filePath = path.join("src/archivos/", req.file.originalname);
     console.log(filePath);
     const file = req.file; 
@@ -88,4 +89,7 @@ async function uploadFile(){
     }
 }
 
+router.get("/", checkToken, archivoCtrl.listarArchivos);
+router.post("/", checkToken, archivoCtrl.addArchivo);
+router.delete("/:id", checkToken, archivoCtrl.delArchivo);
 export default router;
