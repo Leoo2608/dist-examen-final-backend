@@ -11,8 +11,8 @@ export const listarArchivos = async (req, res) => {
 }
 export const addArchivo=async(req,res)=>{
     try {
-        const{nombre,tipo,url, idusuario}=req.body;
-        await pool.query('select fc_add_archivo($1,$2,$3,$4)',[nombre,tipo, url, idusuario]);
+        const{nombre,tipo,url, idusuario, idurl}=req.body;
+        await pool.query('select fc_add_archivos($1,$2,$3,$4,$5)',[nombre,tipo, url, idusuario, idurl]);
         return res.status(200).json(`El archivo '${nombre}' se ha subido correctamente`);
     } catch (e) {
         console.log(e);
@@ -22,7 +22,7 @@ export const addArchivo=async(req,res)=>{
 export const delArchivo=async(req,res)=>{
     try {
         const id=parseInt(req.params.id);
-        await pool.query('select fc_delete_archivo($1)',[id]);
+        await pool.query('select fc_delete_archivos($1)',[id]);
         return res.status(200).json(`El archivo se ha elimindo correctamente.`);
     } catch (e) {
         console.log(e);

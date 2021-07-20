@@ -23,7 +23,7 @@ const drive = google.drive({
 var filePath;
 var archivo;
 
-router.post('/uploading', async (req, res)=>{ // 
+router.post('/uploading',checkToken ,async (req, res)=>{ // 
     if(req.files){
         console.log(req.files)
         console.log(req.files.hola.data);
@@ -32,8 +32,8 @@ router.post('/uploading', async (req, res)=>{ //
         filePath = stream;
         archivo = req.files.hola.name; // nombre del archivo 
         const tipo = req.files.hola.mimetype; // tipo del archivo
-        const link = await uploadFile(tipo);
-        res.send(link)
+        const data = await uploadFile(tipo);
+        res.send(data)
     }
 })
 
@@ -49,9 +49,9 @@ async function uploadFile(tipo) {
             }
         })
         console.log(response.data);
-        const link = await generatePublicUrl(response.data.id);
-        console.log("uploadFile() va a retornar: " + link)
-        return link;
+        const data = await generatePublicUrl(response.data.id);
+        console.log("uploadFile() va a retornar: " + data.link+', '+data.id)
+        return data;
     } catch (error) {
         console.log(error.message);
     }
@@ -72,8 +72,25 @@ async function generatePublicUrl(id) {
             fileId: fileId,
             fields: 'webViewLink,webContentLink'
         });
-        console.log("generatePublicUrl() va a retornar: " + result.data.webViewLink);
-        return result.data.webViewLink;
+        
+        var data = {
+            link: result.data.webViewLink,
+            id: fileId
+        }
+        console.log("generatePublicUrl() va a retornar: " + data.link+' y '+ data.id);
+        return data;
+    } catch (error) {
+        console.log(error.message);
+    }
+}
+
+async function deleteFile(id){
+    try {
+        const response = await drive.files.delete({
+            fileId:id
+        });
+        console.log(response.data,response.status);
+        return response;
     } catch (error) {
         console.log(error.message);
     }
@@ -82,4 +99,12 @@ async function generatePublicUrl(id) {
 router.get("/:id", checkToken, archivoCtrl.listarArchivos);
 router.post("/", checkToken, archivoCtrl.addArchivo);
 router.delete("/:id", checkToken, archivoCtrl.delArchivo);
+
+router.delete('/idurl/:idurl', checkToken, async (req, res)=>{
+    if(req){
+        console.log(req.params.idurl)
+        const data = await deleteFile(req.params.idurl);
+        res.send(data)
+    }
+})
 export default router;
