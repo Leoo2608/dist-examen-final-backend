@@ -20,5 +20,4 @@ app.use('/api/auth/users', userRoutes);
 app.use('/api/auth/correos', correoRoutes)
 app.use('/api/auth/archivos', archivoRoutes)
 
-
 export default app;
